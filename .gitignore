@@ -1,0 +1,66 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Production build output
+/dist
+/build
+.vite/ # Vite cache directory
+
+# Compiled output
+*.js.map
+*.jsx.map
+*.ts.map
+*.tsx.map
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# npm package manager cache
+.npm/
+
+# Yarn classic cache files
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Firebase specific files (if you had private keys or specific build outputs)
+# Generally, your firebase.js contains public API keys and is safe to commit.
+# If you ever introduced Firebase Admin SDK keys (which are private), those MUST be ignored.
+# For now, no specific firebase files need to be ignored beyond .env if you use it for credentials.
+
+# Test coverage directories
+/coverage
+
+# VS Code specific settings (if not shared)
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# Local history files
+.history
