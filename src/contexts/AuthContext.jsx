@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, db } from '../lib/firebase'; // Ensure 'db' is imported
+import { auth, db } from '../lib/firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
 } from 'firebase/auth';
-// Import Firestore functions needed to save user profiles
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'; // Add these imports
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore'; // Import Firestore functions
 
 const AuthContext = createContext();
 
@@ -20,113 +19,134 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  // Sign up function
+  // Function to create/update user profile in Firestore
+  const createUserProfile = async (user, displayName = null) => {
+    try {
+      const userRef = doc(db, 'userProfiles', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: displayName || user.email.split('@')[0], // Default display name
+          createdAt: new Date(),
+        });
+      } else if (displayName && userDoc.data().displayName !== displayName) {
+        // Only update if displayName is provided and different
+        await updateDoc(userRef, { displayName: displayName });
+      }
+      return true;
+    } catch (error) {
+      console.error("Error creating/updating user profile:", error);
+      return false;
+    }
+  };
+
   const signup = async (email, password) => {
     setAuthError(null);
     try {
-      setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // --- NEW: Save user profile to Firestore on signup ---
-      await setDoc(doc(db, 'userProfiles', user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.email.split('@')[0], // A simple display name (e.g., "john.doe" from "john.doe@example.com")
-        createdAt: serverTimestamp(),
-      }, { merge: true }); // Use merge:true to ensure it creates if not exists, and won't overwrite existing fields if profile already exists (e.g., from an earlier manual entry)
-      // --- END NEW ---
-
-      setCurrentUser(user);
-      setLoading(false);
+      await createUserProfile(userCredential.user, email.split('@')[0]); // Create profile on signup
       return true;
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error("Error during signup:", error);
       setAuthError(error.message);
-      setLoading(false);
       return false;
     }
   };
 
-  // Login function
   const login = async (email, password) => {
     setAuthError(null);
     try {
-      setLoading(true);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // --- NEW: Update user profile on login (e.g., last login time, or create if somehow missing) ---
-      await setDoc(doc(db, 'userProfiles', user.uid), {
-        uid: user.uid,
-        email: user.email,
-        // Optionally update displayName, or keep existing one if user changes it later
-        displayName: user.displayName || user.email.split('@')[0], // Update if a display name is set or default
-        lastLoginAt: serverTimestamp(),
-      }, { merge: true });
-      // --- END NEW ---
-
-      setCurrentUser(user);
-      setLoading(false);
+      await signInWithEmailAndPassword(auth, email, password);
       return true;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Error during login:", error);
       setAuthError(error.message);
-      setLoading(false);
       return false;
     }
   };
 
-  // Logout function
   const logout = async () => {
     setAuthError(null);
     try {
       await signOut(auth);
-      setCurrentUser(null);
+      setCurrentUser(null); // Clear current user state on logout
       return true;
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Error during logout:", error);
       setAuthError(error.message);
       return false;
     }
   };
 
-  // Auth state observer
+  // NEW: Function to update user profile fields
+  const updateUserProfile = async (uid, updates) => {
+    if (!uid) {
+        setAuthError('User ID is required for profile update.');
+        return false;
+    }
+    if (!updates || Object.keys(updates).length === 0) {
+        setAuthError('No updates provided.');
+        return false;
+    }
+    try {
+        const userRef = doc(db, 'userProfiles', uid);
+        await updateDoc(userRef, updates);
+        setAuthError(null);
+        // Optimistically update currentUser state if displayName changes
+        if (updates.displayName) {
+            setCurrentUser(prevUser => ({
+                ...prevUser,
+                displayName: updates.displayName,
+            }));
+        }
+        return true;
+    } catch (error) {
+        console.error("Error updating user profile:", error);
+        setAuthError(`Failed to update profile: ${error.message}`);
+        return false;
+    }
+  };
+
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      setLoading(false);
-
-      // Optional: If you want to update user profile on initial load too
       if (user) {
-        try {
-          await setDoc(doc(db, 'userProfiles', user.uid), {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || user.email.split('@')[0],
-            lastActiveAt: serverTimestamp(), // Update last active time
-          }, { merge: true });
-        } catch (error) {
-          console.warn("Failed to update user profile on auth state change:", error);
+        // Fetch user profile from Firestore if it exists
+        const userProfileRef = doc(db, 'userProfiles', user.uid);
+        const userProfileSnap = await getDoc(userProfileRef);
+        if (userProfileSnap.exists()) {
+          setCurrentUser({ ...user, ...userProfileSnap.data() }); // Merge auth user with profile data
+        } else {
+          // If no profile exists (e.g., old user or direct auth creation), create one
+          await createUserProfile(user);
+          const newUserProfileSnap = await getDoc(userProfileRef); // Re-fetch after creation
+          setCurrentUser({ ...user, ...newUserProfileSnap.data() });
         }
+      } else {
+        setCurrentUser(null);
       }
+      setLoading(false);
     });
 
-    return unsubscribe; // Cleanup subscription
-  }, []);
+    return () => unsubscribe();
+  }, []); // Empty dependency array means this runs once on mount
 
   const value = {
     currentUser,
     signup,
     login,
     logout,
+    updateUserProfile, // Expose the new function
     loading,
     authError,
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children} {/* Only render children once loading is false */}
+      {!loading && children} {/* Only render children once loading is complete */}
     </AuthContext.Provider>
   );
 };

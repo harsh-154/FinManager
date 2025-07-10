@@ -1,16 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react'; // Import useState
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSplitwise } from '../contexts/SplitwiseContext';
 import SharedExpenseForm from '../components/splitwise/SharedExpenseForm';
 import SharedExpenseList from '../components/splitwise/SharedExpenseList';
 import BalanceDisplay from '../components/splitwise/BalanceDisplay';
 import AddMemberForm from '../components/splitwise/AddMemberForm';
-import RecordPaymentForm from '../components/splitwise/RecordPaymentForm'; // NEW IMPORT
+import RecordPaymentForm from '../components/splitwise/RecordPaymentForm';
+import EditSharedExpenseModal from '../components/splitwise/EditSharedExpenseModal'; // NEW IMPORT
 
 function GroupDetailsPage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { groups, loadingGroups, splitwiseError, fetchSharedExpensesForGroup, groupMembersDetails, groupBalances } = useSplitwise();
+
+  // NEW STATE: To manage which expense is being edited
+  const [editingExpense, setEditingExpense] = useState(null);
 
   const currentGroup = groups.find(group => group.id === groupId);
 
@@ -23,6 +27,15 @@ function GroupDetailsPage() {
     };
   }, [groupId, fetchSharedExpensesForGroup]);
 
+  // NEW: Handler for when an expense is selected for editing
+  const handleEditExpense = (expense) => {
+    setEditingExpense(expense);
+  };
+
+  // NEW: Handler to close the edit modal
+  const handleCloseEditModal = () => {
+    setEditingExpense(null);
+  };
 
   if (loadingGroups) {
     return (
@@ -86,16 +99,19 @@ function GroupDetailsPage() {
           groupMembersDetails={groupMembersDetails}
         />
 
-        {/* Add Shared Expense Form */}
-        <SharedExpenseForm
-          groupId={groupId}
-          groupMembers={currentGroup.members}
-          groupMembersDetails={groupMembersDetails}
-        />
+        {/* Add Shared Expense Form (conditionally hide if editing an expense) */}
+        {!editingExpense && (
+          <SharedExpenseForm
+            groupId={groupId}
+            groupMembers={currentGroup.members}
+            groupMembersDetails={groupMembersDetails}
+          />
+        )}
 
         {/* Shared Expense List */}
         <SharedExpenseList
           groupMembersDetails={groupMembersDetails}
+          onEditExpense={handleEditExpense} // NEW: Pass the handler to SharedExpenseList
         />
 
         {/* Balances Display */}
@@ -103,6 +119,16 @@ function GroupDetailsPage() {
           groupBalances={groupBalances}
           groupMembersDetails={groupMembersDetails}
         />
+
+        {/* NEW: Edit Shared Expense Modal (conditionally rendered) */}
+        {editingExpense && (
+          <EditSharedExpenseModal
+            expense={editingExpense}
+            groupMembers={currentGroup.members}
+            groupMembersDetails={groupMembersDetails}
+            onClose={handleCloseEditModal} // Pass the close handler
+          />
+        )}
       </div>
     </div>
   );

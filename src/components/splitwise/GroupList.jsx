@@ -1,58 +1,76 @@
 import React from 'react';
 import { useSplitwise } from '../../contexts/SplitwiseContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext'; // To check if current user created the group
 
 function GroupList() {
-  const { groups, loadingGroups, splitwiseError, deleteGroup } = useSplitwise();
+  const { groups, loadingGroups, splitwiseError, deleteGroup, groupMembersDetails } = useSplitwise();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  if (loadingGroups) {
-    return <div className="text-center py-4">Loading groups...</div>;
-  }
-
-  if (splitwiseError) {
-    return <div className="text-red-500 text-center py-4">Error: {splitwiseError}</div>;
-  }
-
-  const handleGroupClick = (groupId) => {
-    navigate(`/groups/${groupId}`);
-  };
-
-  const handleDelete = async (groupId, groupName) => {
-    if (window.confirm(`Are you sure you want to delete the group "${groupName}"? This action cannot be undone.`)) {
-      await deleteGroup(groupId);
+  const handleDeleteGroup = async (groupId) => {
+    if (window.confirm("Are you sure you want to delete this group and all its expenses? This action cannot be undone.")) {
+      const success = await deleteGroup(groupId);
+      if (success) {
+        console.log("Group deleted successfully!");
+        // Optionally, show a success message to the user
+      } else {
+        console.error("Failed to delete group:", splitwiseError);
+        // Optionally, show an error message to the user
+      }
     }
   };
 
+  if (loadingGroups) {
+    return <p className="text-center text-gray-600">Loading groups...</p>;
+  }
+
+  if (splitwiseError) {
+    return <p className="text-red-500 text-center">Error fetching groups: {splitwiseError}</p>;
+  }
+
+  if (!groups || groups.length === 0) {
+    return <p className="text-center text-gray-600">No groups found. Create one above!</p>;
+  }
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">Your Groups</h2>
-      {groups.length === 0 ? (
-        <p className="text-gray-600">No groups found. Create one to get started!</p>
-      ) : (
-        <ul className="divide-y divide-gray-200">
-          {groups.map((group) => (
-            <li key={group.id} className="py-3 flex justify-between items-center">
-              <div
-                className="cursor-pointer hover:text-teal-600 transition-colors duration-200"
-                onClick={() => handleGroupClick(group.id)}
-              >
-                <p className="text-lg font-medium text-gray-900">{group.name}</p>
-                <p className="text-sm text-gray-500">{group.members.length} members</p>
-              </div>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">Your Groups ({groups.length})</h2>
+      <ul className="space-y-4">
+        {groups.map((group) => (
+          <li
+            key={group.id}
+            className="bg-gray-50 p-4 rounded-md shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center"
+          >
+            <div className="mb-2 sm:mb-0">
+              <h3 className="text-lg font-medium text-gray-900">{group.name}</h3>
+              <p className="text-sm text-gray-600">
+                Members: {group.members ? group.members.length : '0'}
+              </p>
+              <p className="text-sm text-gray-500">
+                Created By: {groupMembersDetails[group.createdBy] || 'Unknown'} on {group.createdAt ? group.createdAt.toLocaleDateString() : 'N/A'}
+              </p>
+            </div>
+            <div className="flex space-x-2 flex-wrap gap-2 sm:gap-0">
               <button
-                onClick={() => handleDelete(group.id, group.name)}
-                className="text-red-500 hover:text-red-700 focus:outline-none"
-                title="Delete Group"
+                onClick={() => navigate(`/group/${group.id}`)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-sm"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clipRule="evenodd" />
-                </svg>
+                View Details
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
+              {/* Only allow creator to delete the group */}
+              {currentUser && group.createdBy === currentUser.uid && (
+                <button
+                  onClick={() => handleDeleteGroup(group.id)}
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -1,63 +1,120 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSplitwise } from '../../contexts/SplitwiseContext';
+import { useAuth } from '../../contexts/AuthContext';
 
-function SharedExpenseList({ groupMembersDetails }) {
+// Add onEditExpense prop
+function SharedExpenseList({ groupMembersDetails, onEditExpense }) {
   const { currentGroupExpenses, loadingCurrentGroupExpenses, splitwiseError, deleteSharedExpense } = useSplitwise();
+  const { currentUser } = useAuth();
+  const [deletingId, setDeletingId] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   if (loadingCurrentGroupExpenses) {
-    return <div className="text-center py-4">Loading shared expenses...</div>;
+    return <p className="text-center text-gray-600">Loading expenses...</p>;
   }
 
   if (splitwiseError) {
-    return <div className="text-red-500 text-center py-4">Error: {splitwiseError}</div>;
+    return <p className="text-red-500 text-center">Error: {splitwiseError}</p>;
   }
 
-  const handleDelete = async (expenseId) => {
-    if (window.confirm("Are you sure you want to delete this shared expense?")) {
-      await deleteSharedExpense(expenseId);
+  if (!currentGroupExpenses || currentGroupExpenses.length === 0) {
+    return <p className="text-center text-gray-600">No shared expenses yet for this group.</p>;
+  }
+
+  const handleDeleteClick = (expenseId) => {
+    setDeletingId(expenseId);
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingId) {
+      const success = await deleteSharedExpense(deletingId);
+      if (success) {
+        console.log("Expense deleted successfully:", deletingId);
+      } else {
+        console.error("Failed to delete expense:", deletingId, splitwiseError);
+        // Add user feedback for error
+      }
+      setDeletingId(null);
+      setShowConfirm(false);
     }
   };
 
-  const getMemberName = (uid) => groupMembersDetails[uid] || `User-${uid.substring(0, 4)}`;
+  const cancelDelete = () => {
+    setDeletingId(null);
+    setShowConfirm(false);
+  };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
       <h2 className="text-xl font-semibold mb-4 text-gray-800">Shared Expenses</h2>
-      {currentGroupExpenses.length === 0 ? (
-        <p className="text-gray-600">No shared expenses recorded yet for this group.</p>
-      ) : (
-        <ul className="divide-y divide-gray-200">
-          {currentGroupExpenses.map((expense) => (
-            <li key={expense.id} className="py-3 flex justify-between items-start">
+      <div className="space-y-4">
+        {currentGroupExpenses.map((expense) => (
+          <div key={expense.id} className="border-b pb-3 border-gray-200 last:border-b-0 last:pb-0">
+            <div className="flex justify-between items-start">
               <div>
                 <p className="text-lg font-medium text-gray-900">{expense.description}</p>
-                <p className="text-sm text-gray-600">Paid by: <span className="font-semibold">{getMemberName(expense.paidBy)}</span></p>
-                <p className="text-sm text-gray-500">
-                  Split between: {expense.participants.map(getMemberName).join(', ')}
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">{groupMembersDetails[expense.paidBy] || 'Unknown'}</span> paid ₹{expense.amount.toFixed(2)}
                 </p>
-                {expense.splitMethod === 'exact' && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    (Exact amounts: {Object.entries(expense.exactAmounts)
-                      .map(([uid, amount]) => `${getMemberName(uid)}: ₹${amount.toLocaleString('en-IN')}`)
-                      .join(', ')})
-                  </div>
+                <p className="text-sm text-gray-600">
+                  For: {expense.participants.map(pId => groupMembersDetails[pId] || 'Unknown').join(', ')}
+                </p>
+                {expense.type === 'payment' && (
+                  <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20 mt-1">Payment Settled</span>
                 )}
               </div>
-              <div className="flex items-center">
-                <p className="text-lg font-bold text-teal-600 mr-4">₹{expense.amount.toLocaleString('en-IN')}</p>
-                <button
-                  onClick={() => handleDelete(expense.id)}
-                  className="text-red-500 hover:text-red-700 focus:outline-none"
-                  title="Delete Expense"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clipRule="evenodd" />
-                  </svg>
-                </button>
+              <div className="flex space-x-2"> {/* Container for buttons */}
+                {/* Only show edit/delete button if the current user created the expense */}
+                {currentUser && expense.createdBy === currentUser.uid && (
+                  <>
+                    {/* NEW CONDITION: Only show Edit button if expense.type is NOT 'payment' */}
+                    {expense.type !== 'payment' && (
+                      <button
+                        onClick={() => onEditExpense(expense)}
+                        className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        title="Edit Expense"
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteClick(expense.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      title="Delete Expense"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </div>
-            </li>
-          ))}
-        </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm mx-auto text-center">
+            <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+            <p className="mb-6">Are you sure you want to delete this expense? This action cannot be undone.</p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
