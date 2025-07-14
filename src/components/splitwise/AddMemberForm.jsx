@@ -45,8 +45,7 @@ function AddMemberForm({ groupId, groupMembers }) {
       }
 
       // 3. Add member to the group using SplitwiseContext function
-      const memberAdded = await addGroupMember(groupId, newMemberUid);
-
+      const memberAdded = await addGroupMember(groupId, memberEmail.trim());
       if (memberAdded) {
         setSuccess(`Successfully added ${memberEmail} to the group!`);
         setMemberEmail(''); // Clear the input field
