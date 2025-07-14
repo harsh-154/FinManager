@@ -331,7 +331,7 @@ function PersonalFinancePage() {
     deleteIncome,
     deleteExpense,
     deleteBill,
-    markBillAsPaid,
+    toggleBillPaidStatus,
   } = useFinance();
 
   // For debugging, you might want to log the data and loading states
@@ -344,6 +344,16 @@ function PersonalFinancePage() {
   //   console.log('Loading Bills:', loadingBills);
   //   console.log('Finance Error:', financeError);
   // }, [incomes, expenses, bills, loadingIncomes, loadingExpenses, loadingBills, financeError]);
+  const totalPaidBills = bills
+  .filter((bill) => bill.isPaid)
+  .reduce((sum, bill) => sum + (bill.amount || 0), 0);
+  const totalIncome = incomes.reduce((sum, income) => sum + (income.amount || 0), 0);
+  const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+  const availableBalance = totalIncome - totalExpenses - totalPaidBills;
+  const balanceStyle = availableBalance < 0 ? 'text-red-600' : 'text-green-700';
+  const balanceLabel = availableBalance < 0 ? `(debt)` : '';
+
+  
 
 
   return (
@@ -351,6 +361,12 @@ function PersonalFinancePage() {
       <h1 className="text-3xl font-bold mb-6 text-gray-900">My Personal Finances</h1>
 
       {financeError && <p className="text-red-500 text-center mb-4">{financeError}</p>}
+      <div className={`text-xl font-semibold mb-6 text-center ${balanceStyle}`}>
+        Available Balance: ₹{Math.abs(availableBalance).toFixed(2)} {balanceLabel}
+      </div>
+      <div className="text-sm text-gray-500 text-center mb-4">
+        Income: ₹{totalIncome.toFixed(2)} | Expenses: ₹{totalExpenses.toFixed(2)} | Paid Bills: ₹{totalPaidBills.toFixed(2)}
+      </div>
 
       {/* Income Section */}
       <section className="mb-8">
@@ -381,7 +397,7 @@ function PersonalFinancePage() {
         {loadingBills ? (
           <p className="text-center text-gray-600">Loading bills...</p>
         ) : (
-          <BillList bills={bills} onDeleteBill={deleteBill} onMarkBillAsPaid={markBillAsPaid} />
+          <BillList bills={bills} onDeleteBill={deleteBill} onMarkBillAsPaid={toggleBillPaidStatus} />
         )}
       </section>
     </div>
