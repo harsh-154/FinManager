@@ -98,14 +98,14 @@ const IncomeList = ({ incomes, onDeleteIncome }) => {
 const ExpenseForm = ({ onAddExpense, loading, error }) => {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-
+  const [category,setCategory]=useState('General');
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!description.trim() || !amount) {
       alert('Please enter both description and amount.');
       return;
     }
-    const success = await onAddExpense(description, parseFloat(amount));
+    const success = await onAddExpense(category, parseFloat(amount),description);
     if (success) {
       setDescription('');
       setAmount('');
@@ -116,6 +116,21 @@ const ExpenseForm = ({ onAddExpense, loading, error }) => {
     <div className="bg-white p-4 rounded-lg shadow mb-4">
       <h2 className="text-lg font-semibold text-gray-800 mb-3">Add New Expense</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label htmlFor="expenseCategory" className="block text-sm font-medium text-gray-700">Category</label>
+          <select
+            id="expenseCategory"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+          >
+            <option value="General">General</option>
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Utilities">Utilities</option>
+          </select>
+        </div>
         <div>
           <label htmlFor="expenseDescription" className="block text-sm font-medium text-gray-700">Description</label>
           <input

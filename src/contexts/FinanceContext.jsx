@@ -10,9 +10,11 @@ import {
   serverTimestamp,
   deleteDoc,
   doc,
-  updateDoc, // <--- ENSURE THIS IS PRESENT
+  updateDoc,
+  Timestamp // <--- ENSURE THIS IS PRESENT
 } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
+import { desc } from 'framer-motion/client';
 
 const FinanceContext = createContext();
 
@@ -63,7 +65,7 @@ export const FinanceProvider = ({ children }) => {
         userId: currentUser.uid,
         category: category,
         amount: Number(amount),
-        description: description.trim(),
+        description: (description || '').trim(),
         date: serverTimestamp(),
       });
       setFinanceError(null);
@@ -76,7 +78,7 @@ export const FinanceProvider = ({ children }) => {
   };
 
   // Function to add a bill
-  const addBill = async (name, amount, dueDate, isRecurring, category) => {
+  const addBill = async (name, amount, dueDate, isRecurring=false, category='General') => {
     if (!currentUser) {
       setFinanceError('No user logged in to add a bill.');
       return false;
@@ -86,8 +88,8 @@ export const FinanceProvider = ({ children }) => {
         userId: currentUser.uid,
         name: name.trim(),
         amount: Number(amount),
-        dueDate: dueDate,
-        isRecurring: isRecurring,
+        dueDate: Timestamp.fromDate(new Date(dueDate)),
+        isRecurring: Boolean(isRecurring),
         category: category || 'General',
         isPaid: false,
         createdAt: serverTimestamp(),
@@ -236,8 +238,18 @@ export const FinanceProvider = ({ children }) => {
         const fetchedBills = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-          dueDate: doc.data().dueDate ? doc.data().dueDate.toDate() : new Date(),
-          paidAt: doc.data().paidAt ? doc.data().paidAt.toDate() : null,
+          dueDate: (() => {
+            const raw = doc.data().dueDate;
+            if (raw && typeof raw.toDate === 'function') return raw.toDate();
+            if (raw instanceof Date || typeof raw === 'string') return new Date(raw);
+            return new Date(); // fallback
+          })(),
+          paidAt: (() => {
+            const raw = doc.data().paidAt;
+            if (raw && typeof raw.toDate === 'function') return raw.toDate();
+            if (raw instanceof Date || typeof raw === 'string') return new Date(raw);
+            return null;
+          })(),
         }));
         setBills(fetchedBills);
         setLoadingBills(false);

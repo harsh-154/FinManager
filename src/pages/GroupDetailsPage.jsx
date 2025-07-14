@@ -67,7 +67,7 @@ function GroupDetailsPage() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Group: {currentGroup.name}</h1>
           <button
-            onClick={() => navigate('/groups')}
+            onClick={() => navigate('/dashboard')}
             className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
             Back to Groups
