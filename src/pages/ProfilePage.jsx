@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
+function stringToInitials(nameOrEmail) {
+  if (!nameOrEmail) return '';
+  const parts = nameOrEmail.split(/\s+|@/);
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || '';
+  return (parts[0][0] + (parts[1][0] || ''))?.toUpperCase();
+}
+
 function ProfilePage() {
   const { currentUser, loading: authLoading, authError, updateUserProfile } = useAuth();
   const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
@@ -41,81 +48,108 @@ function ProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p>Loading profile...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-700 font-medium">Loading profile...</p>
+        </div>
       </div>
     );
   }
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-red-500">Authentication required to view profile.</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <p className="text-red-500 font-semibold text-lg">Authentication required to view profile.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Your Profile Settings</h1>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-4 sm:p-8">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center flex items-center justify-center gap-2">
+          <span className="material-icons text-blue-500 text-4xl">person</span>
+          Profile Settings
+        </h1>
         {authError && <p className="text-red-500 text-center mt-4">{authError}</p>}
-
-        {/* User Info & Profile Settings Section */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
-            Current User: {currentUser?.displayName || currentUser?.email}
+        {/* Profile Card */}
+        <div className="bg-white p-8 rounded-2xl shadow-2xl mb-8 flex flex-col items-center relative">
+          {/* Avatar */}
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2">
+            {currentUser?.photoURL ? (
+              <img
+                src={currentUser.photoURL}
+                alt="Profile avatar"
+                className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-gray-200"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-white text-4xl font-bold border-4 border-white shadow-md">
+                <span className="material-icons text-white text-5xl">person</span>
+              </div>
+            )}
+          </div>
+          <div className="h-12" /> {/* Spacer for avatar */}
+          <h2 className="text-2xl font-semibold mb-1 text-gray-800 mt-2">
+            {currentUser?.displayName || currentUser?.email}
           </h2>
-          {!isEditingProfile ? (
-            <div className="flex items-center justify-between">
-                <p className="text-gray-700">Display Name: <span className="font-medium">{currentUser?.displayName || 'Not set'}</span></p>
+          <p className="text-gray-500 mb-4 text-sm">{currentUser?.email}</p>
+          <hr className="w-full border-gray-200 mb-4" />
+          {/* Profile Edit Section */}
+          <div className="w-full">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Display Name</h3>
+            {!isEditingProfile ? (
+              <div className="flex items-center justify-between w-full">
+                <span className="text-gray-700 text-base font-medium">{currentUser?.displayName || <span className="italic text-gray-400">Not set</span>}</span>
                 <button
-                    onClick={() => setIsEditingProfile(true)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 text-sm rounded focus:outline-none focus:shadow-outline"
+                  onClick={() => setIsEditingProfile(true)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-4 text-sm rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
                 >
-                    Edit Display Name
+                  Edit
                 </button>
-            </div>
-          ) : (
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              </div>
+            ) : (
+              <form onSubmit={handleUpdateProfile} className="space-y-4 mt-2">
                 <div>
-                    <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-                        New Display Name
-                    </label>
-                    <input
-                        type="text"
-                        id="displayName"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        required
-                    />
+                  <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
+                    New Display Name
+                  </label>
+                  <input
+                    type="text"
+                    id="displayName"
+                    className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 sm:text-base transition"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    required
+                  />
                 </div>
-                {profileUpdateMessage && <p className="text-green-600 text-sm">{profileUpdateMessage}</p>}
-                {profileUpdateError && <p className="text-red-500 text-sm">{profileUpdateError}</p>}
+                {profileUpdateMessage && <p className="text-green-600 text-sm font-medium">{profileUpdateMessage}</p>}
+                {profileUpdateError && <p className="text-red-500 text-sm font-medium">{profileUpdateError}</p>}
                 <div className="flex justify-end space-x-3">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setIsEditingProfile(false);
-                            setDisplayName(currentUser?.displayName || currentUser?.email.split('@')[0]);
-                            setProfileUpdateError(null);
-                            setProfileUpdateMessage('');
-                        }}
-                        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        Save Changes
-                    </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingProfile(false);
+                      setDisplayName(currentUser?.displayName || currentUser?.email.split('@')[0]);
+                      setProfileUpdateError(null);
+                      setProfileUpdateMessage('');
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold transition border border-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                  >
+                    Save Changes
+                  </button>
                 </div>
-            </form>
-          )}
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </div>

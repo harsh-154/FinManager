@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useFinance } from '../contexts/FinanceContext';
 import { useAuth } from '../contexts/AuthContext'; // Potentially useful if components need currentUser.uid
+import { useSplitwise } from '../contexts/SplitwiseContext';
+import { FaPiggyBank } from 'react-icons/fa';
+import { FaMoneyBillWave, FaPlus, FaTrash, FaRegListAlt, FaReceipt, FaCheckCircle } from 'react-icons/fa';
 
 // --- Income Components ---
 const IncomeForm = ({ onAddIncome, loading, error }) => {
@@ -22,8 +25,10 @@ const IncomeForm = ({ onAddIncome, loading, error }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow mb-4">
-      <h2 className="text-lg font-semibold text-gray-800 mb-3">Add New Income</h2>
+    <div className="bg-gray-50 p-4 rounded-xl shadow flex flex-col gap-2 mb-4 border border-green-100">
+      <h2 className="text-lg font-bold text-green-700 flex items-center gap-2 mb-3">
+        <FaMoneyBillWave className="text-green-500" /> Add New Income
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="incomeSource" className="block text-sm font-medium text-gray-700">Source</label>
@@ -54,9 +59,9 @@ const IncomeForm = ({ onAddIncome, loading, error }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition"
         >
-          {loading ? 'Adding...' : 'Add Income'}
+          <FaPlus /> {loading ? 'Adding...' : 'Add Income'}
         </button>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </form>
@@ -68,13 +73,14 @@ const IncomeList = ({ incomes, onDeleteIncome }) => {
   if (incomes.length === 0) {
     return <p className="text-center text-gray-600">No incomes recorded yet.</p>;
   }
-
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Recent Incomes</h3>
+    <div className="bg-white p-4 rounded-xl shadow border border-green-100">
+      <h3 className="text-lg font-semibold text-green-700 flex items-center gap-2 mb-3">
+        <FaRegListAlt className="text-green-500" /> Recent Incomes
+      </h3>
       <ul className="divide-y divide-gray-200">
         {incomes.map((income) => (
-          <li key={income.id} className="py-3 flex justify-between items-center">
+          <li key={income.id} className="py-3 flex justify-between items-center hover:bg-green-50 rounded transition">
             <div>
               <p className="text-gray-900 font-medium">{income.source}: ₹{income.amount.toFixed(2)}</p>
               <p className="text-sm text-gray-500">
@@ -83,9 +89,9 @@ const IncomeList = ({ incomes, onDeleteIncome }) => {
             </div>
             <button
               onClick={() => onDeleteIncome(income.id)}
-              className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
             >
-              Delete
+              <FaTrash /> Delete
             </button>
           </li>
         ))}
@@ -113,8 +119,10 @@ const ExpenseForm = ({ onAddExpense, loading, error }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow mb-4">
-      <h2 className="text-lg font-semibold text-gray-800 mb-3">Add New Expense</h2>
+    <div className="bg-gray-50 p-4 rounded-xl shadow flex flex-col gap-2 mb-4 border border-red-100">
+      <h2 className="text-lg font-bold text-red-700 flex items-center gap-2 mb-3">
+        <FaReceipt className="text-red-500" /> Add New Expense
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="expenseCategory" className="block text-sm font-medium text-gray-700">Category</label>
@@ -160,9 +168,9 @@ const ExpenseForm = ({ onAddExpense, loading, error }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition"
         >
-          {loading ? 'Adding...' : 'Add Expense'}
+          <FaPlus /> {loading ? 'Adding...' : 'Add Expense'}
         </button>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </form>
@@ -174,13 +182,14 @@ const ExpenseList = ({ expenses, onDeleteExpense }) => {
   if (expenses.length === 0) {
     return <p className="text-center text-gray-600">No expenses recorded yet.</p>;
   }
-
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Recent Expenses</h3>
+    <div className="bg-white p-4 rounded-xl shadow border border-red-100">
+      <h3 className="text-lg font-semibold text-red-700 flex items-center gap-2 mb-3">
+        <FaRegListAlt className="text-red-500" /> Recent Expenses
+      </h3>
       <ul className="divide-y divide-gray-200">
         {expenses.map((expense) => (
-          <li key={expense.id} className="py-3 flex justify-between items-center">
+          <li key={expense.id} className="py-3 flex justify-between items-center hover:bg-red-50 rounded transition">
             <div>
               <p className="text-gray-900 font-medium">{expense.description}: ₹{expense.amount.toFixed(2)}</p>
               <p className="text-sm text-gray-500">
@@ -189,9 +198,9 @@ const ExpenseList = ({ expenses, onDeleteExpense }) => {
             </div>
             <button
               onClick={() => onDeleteExpense(expense.id)}
-              className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
             >
-              Delete
+              <FaTrash /> Delete
             </button>
           </li>
         ))}
@@ -221,8 +230,10 @@ const BillForm = ({ onAddBill, loading, error }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow mb-4">
-      <h2 className="text-lg font-semibold text-gray-800 mb-3">Add New Bill</h2>
+    <div className="bg-gray-50 p-4 rounded-xl shadow flex flex-col gap-2 mb-4 border border-blue-100">
+      <h2 className="text-lg font-bold text-blue-700 flex items-center gap-2 mb-3">
+        <FaReceipt className="text-blue-500" /> Add New Bill
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label htmlFor="billName" className="block text-sm font-medium text-gray-700">Bill Name</label>
@@ -264,9 +275,9 @@ const BillForm = ({ onAddBill, loading, error }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
         >
-          {loading ? 'Adding...' : 'Add Bill'}
+          <FaPlus /> {loading ? 'Adding...' : 'Add Bill'}
         </button>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </form>
@@ -274,42 +285,49 @@ const BillForm = ({ onAddBill, loading, error }) => {
   );
 };
 
-const BillList = ({ bills, onDeleteBill, onMarkBillAsPaid }) => {
+const BillList = ({ bills, onDeleteBill, onMarkBillAsPaid, highlightOverdue = false }) => {
   if (bills.length === 0) {
     return <p className="text-center text-gray-600">No bills recorded yet.</p>;
   }
-
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <h3 className="text-lg font-semibold text-gray-800 mb-3">Upcoming Bills</h3>
+    <div className="bg-white p-4 rounded-xl shadow border border-blue-100">
+      <h3 className="text-lg font-semibold text-blue-700 flex items-center gap-2 mb-3">
+        <FaRegListAlt className="text-blue-500" /> Upcoming Bills
+      </h3>
       <ul className="divide-y divide-gray-200">
-        {bills.map((bill) => (
-          <li key={bill.id} className="py-3 flex justify-between items-center">
-            <div>
-              <p className="text-gray-900 font-medium">{bill.name}: ₹{bill.amount.toFixed(2)}</p>
-              <p className="text-sm text-gray-500">Due: {new Date(bill.dueDate).toLocaleDateString()}</p>
-              {bill.paidAt && (
-                <p className="text-sm text-green-600">Paid on: {bill.paidAt.toLocaleDateString()}</p>
-              )}
-            </div>
-            <div className="flex space-x-2">
-              {!bill.paidAt && (
+        {bills.map((bill) => {
+          const isOverdue = !bill.paidAt && new Date(bill.dueDate) < new Date();
+          return (
+            <li key={bill.id} className={`py-3 flex justify-between items-center rounded transition ${highlightOverdue && isOverdue ? 'bg-red-50 border-l-4 border-red-400' : 'hover:bg-blue-50'}`}>
+              <div>
+                <p className={`text-gray-900 font-medium ${highlightOverdue && isOverdue ? 'text-red-700' : ''}`}>{bill.name}: ₹{bill.amount.toFixed(2)}</p>
+                <p className={`text-sm ${highlightOverdue && isOverdue ? 'text-red-600' : 'text-gray-500'}`}>Due: {new Date(bill.dueDate).toLocaleDateString()}</p>
+                {bill.paidAt && (
+                  <p className="text-sm text-green-600 flex items-center gap-1"><FaCheckCircle className="inline text-green-500" /> Paid on: {bill.paidAt.toLocaleDateString()}</p>
+                )}
+                {highlightOverdue && isOverdue && !bill.paidAt && (
+                  <p className="text-xs text-red-600 flex items-center gap-1 mt-1"><span className="material-icons text-red-400 text-base">warning</span> Overdue</p>
+                )}
+              </div>
+              <div className="flex space-x-2">
+                {!bill.paidAt && (
+                  <button
+                    onClick={() => onMarkBillAsPaid(bill.id, bill.isPaid)}
+                    className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 transition"
+                  >
+                    <FaCheckCircle /> Mark as Paid
+                  </button>
+                )}
                 <button
-                  onClick={() => onMarkBillAsPaid(bill.id)}
-                  className="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  onClick={() => onDeleteBill(bill.id)}
+                  className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
                 >
-                  Mark as Paid
+                  <FaTrash /> Delete
                 </button>
-              )}
-              <button
-                onClick={() => onDeleteBill(bill.id)}
-                className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
-              >
-                Delete
-              </button>
-            </div>
-          </li>
-        ))}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -334,6 +352,70 @@ function PersonalFinancePage() {
     toggleBillPaidStatus,
   } = useFinance();
 
+  const { currentUser } = useAuth();
+  const { groups, loadingGroups } = useSplitwise();
+  const [groupBalancesByGroup, setGroupBalancesByGroup] = React.useState([]);
+  const [totalOwed, setTotalOwed] = React.useState(0);
+  const [totalOwes, setTotalOwes] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!currentUser || !groups || groups.length === 0) {
+      setGroupBalancesByGroup([]);
+      setTotalOwed(0);
+      setTotalOwes(0);
+      return;
+    }
+    // For each group, fetch its expenses and calculate balances
+    const fetchAllGroupBalances = async () => {
+      const { db } = await import('../lib/firebase');
+      const { collection, query, where, orderBy, getDocs } = await import('firebase/firestore');
+      const balancesArr = [];
+      let owed = 0;
+      let owes = 0;
+      for (const group of groups) {
+        // Fetch all expenses for this group
+        const q = query(collection(db, 'sharedExpenses'), where('groupId', '==', group.id), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        const expenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Calculate balances for this group
+        const members = group.members;
+        // Inline the calculateGroupBalances logic
+        const balances = {};
+        members.forEach(memberId => { balances[memberId] = 0; });
+        expenses.forEach(expense => {
+          if (expense.isPayment) {
+            balances[expense.paidBy] -= expense.amount;
+            if (expense.participants && expense.participants.length > 0) {
+              balances[expense.participants[0]] += expense.amount;
+            }
+            return;
+          }
+          const { amount, paidBy, participants, splitMethod, exactAmounts } = expense;
+          const validParticipants = participants.filter(p => members.includes(p));
+          if (validParticipants.length === 0) return;
+          balances[paidBy] += amount;
+          if (splitMethod === 'equal') {
+            const share = amount / validParticipants.length;
+            validParticipants.forEach(memberId => { balances[memberId] -= share; });
+          } else if (splitMethod === 'exact') {
+            validParticipants.forEach(memberId => {
+              const exactShare = exactAmounts[memberId] || 0;
+              balances[memberId] -= exactShare;
+            });
+          }
+        });
+        const myBalance = balances[currentUser.uid] || 0;
+        balancesArr.push({ groupName: group.name, groupId: group.id, balance: myBalance });
+        if (myBalance > 0) owed += myBalance;
+        if (myBalance < 0) owes += myBalance;
+      }
+      setGroupBalancesByGroup(balancesArr);
+      setTotalOwed(owed);
+      setTotalOwes(owes);
+    };
+    fetchAllGroupBalances();
+  }, [currentUser, groups]);
+
   // For debugging, you might want to log the data and loading states
   // useEffect(() => {
   //   console.log('Incomes:', incomes);
@@ -357,49 +439,109 @@ function PersonalFinancePage() {
 
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900">My Personal Finances</h1>
-
-      {financeError && <p className="text-red-500 text-center mb-4">{financeError}</p>}
-      <div className={`text-xl font-semibold mb-6 text-center ${balanceStyle}`}>
-        Available Balance: ₹{Math.abs(availableBalance).toFixed(2)} {balanceLabel}
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 p-4 sm:p-8">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Group Balances Summary */}
+        {groupBalancesByGroup.length > 0 && (
+          <div className="bg-white rounded-xl shadow p-6 mb-4">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <span className="material-icons text-indigo-500">groups</span>
+              Group Balances Overview
+            </h2>
+            <div className="flex flex-wrap gap-4 mb-2">
+              {groupBalancesByGroup.map(gb => (
+                <span key={gb.groupId} className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold shadow-sm mr-2 mb-2 ${gb.balance > 0 ? 'bg-green-100 text-green-700' : gb.balance < 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                  {gb.groupName}
+                  <span className="ml-2 font-mono">{gb.balance > 0 ? '+' : ''}{gb.balance.toFixed(2)}</span>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-8 mt-2">
+              <div className="flex items-center gap-2">
+                <span className="material-icons text-green-500">arrow_downward</span>
+                <span className="font-semibold text-green-700">Total to Receive:</span>
+                <span className="font-mono text-green-700">₹{totalOwed.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="material-icons text-red-500">arrow_upward</span>
+                <span className="font-semibold text-red-700">Total to Pay:</span>
+                <span className="font-mono text-red-700">₹{Math.abs(totalOwes).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Available Balance Card */}
+        <div className="bg-white rounded-xl shadow p-6 mb-4">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <span className="material-icons text-green-500">account_balance</span>
+            Available Balance
+          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className={`text-3xl font-bold ${balanceStyle}`}>₹{Math.abs(availableBalance).toFixed(2)}</span>
+              <span className="text-base font-medium text-gray-500">{balanceLabel}</span>
+            </div>
+            <div className="flex flex-wrap gap-6 text-sm mt-2 sm:mt-0">
+              <span className="flex items-center gap-1 text-green-700"><span className="material-icons text-green-400 text-base">trending_up</span> Income: <span className="font-semibold ml-1">₹{totalIncome.toFixed(2)}</span></span>
+              <span className="flex items-center gap-1 text-red-700"><span className="material-icons text-red-400 text-base">trending_down</span> Expenses: <span className="font-semibold ml-1">₹{totalExpenses.toFixed(2)}</span></span>
+              <span className="flex items-center gap-1 text-blue-700"><span className="material-icons text-blue-400 text-base">receipt_long</span> Paid Bills: <span className="font-semibold ml-1">₹{totalPaidBills.toFixed(2)}</span></span>
+            </div>
+          </div>
+        </div>
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-8 flex items-center gap-2">
+          <span className="material-icons text-green-500">account_balance_wallet</span>
+          Personal Finance Dashboard
+        </h1>
+        {/* Income Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <IncomeForm onAddIncome={addIncome} loading={loadingIncomes} error={financeError} />
+            <IncomeList incomes={incomes} onDeleteIncome={deleteIncome} />
+          </div>
+          <div>
+            <ExpenseForm onAddExpense={addExpense} loading={loadingExpenses} error={financeError} />
+            <ExpenseList expenses={expenses} onDeleteExpense={deleteExpense} />
+          </div>
+        </div>
+        {/* Bills Section */}
+        <div className="bg-white rounded-xl shadow p-6 mt-8">
+          <h2 className="text-2xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+            <span className="material-icons text-blue-500">receipt_long</span>
+            Upcoming Bills
+          </h2>
+          <BillForm onAddBill={addBill} loading={loadingBills} error={financeError} />
+          <BillList bills={bills.filter(bill => !bill.paidAt && new Date(bill.dueDate) >= new Date())} onDeleteBill={deleteBill} onMarkBillAsPaid={toggleBillPaidStatus} />
+        </div>
+        {/* Unpaid Past Bills Section */}
+        {bills.filter(bill => !bill.paidAt && new Date(bill.dueDate) < new Date()).length > 0 && (
+          <div className="bg-red-50 rounded-xl shadow p-6 mt-4 border border-red-200">
+            <h2 className="text-2xl font-bold text-red-700 mb-4 flex items-center gap-2">
+              <span className="material-icons text-red-500">warning</span>
+              Unpaid Past Bills (Overdue)
+            </h2>
+            <BillList
+              bills={bills.filter(bill => !bill.paidAt && new Date(bill.dueDate) < new Date())}
+              onDeleteBill={deleteBill}
+              onMarkBillAsPaid={toggleBillPaidStatus}
+              highlightOverdue={true}
+            />
+          </div>
+        )}
+        {/* Paid Bills Section */}
+        {bills.filter(bill => bill.paidAt).length > 0 && (
+          <div className="bg-green-50 rounded-xl shadow p-6 mt-4 border border-green-200">
+            <h2 className="text-2xl font-bold text-green-700 mb-4 flex items-center gap-2">
+              <span className="material-icons text-green-500">check_circle</span>
+              Paid Bills
+            </h2>
+            <BillList
+              bills={bills.filter(bill => bill.paidAt)}
+              onDeleteBill={deleteBill}
+              onMarkBillAsPaid={toggleBillPaidStatus}
+            />
+          </div>
+        )}
       </div>
-      <div className="text-sm text-gray-500 text-center mb-4">
-        Income: ₹{totalIncome.toFixed(2)} | Expenses: ₹{totalExpenses.toFixed(2)} | Paid Bills: ₹{totalPaidBills.toFixed(2)}
-      </div>
-
-      {/* Income Section */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Income</h2>
-        <IncomeForm onAddIncome={addIncome} loading={loadingIncomes} error={financeError} />
-        {loadingIncomes ? (
-          <p className="text-center text-gray-600">Loading incomes...</p>
-        ) : (
-          <IncomeList incomes={incomes} onDeleteIncome={deleteIncome} />
-        )}
-      </section>
-
-      {/* Expenses Section */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Expenses</h2>
-        <ExpenseForm onAddExpense={addExpense} loading={loadingExpenses} error={financeError} />
-        {loadingExpenses ? (
-          <p className="text-center text-gray-600">Loading expenses...</p>
-        ) : (
-          <ExpenseList expenses={expenses} onDeleteExpense={deleteExpense} />
-        )}
-      </section>
-
-      {/* Bills Section */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Bills</h2>
-        <BillForm onAddBill={addBill} loading={loadingBills} error={financeError} />
-        {loadingBills ? (
-          <p className="text-center text-gray-600">Loading bills...</p>
-        ) : (
-          <BillList bills={bills} onDeleteBill={deleteBill} onMarkBillAsPaid={toggleBillPaidStatus} />
-        )}
-      </section>
     </div>
   );
 }
